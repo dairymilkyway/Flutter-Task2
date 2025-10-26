@@ -5,6 +5,7 @@ import '../models/artist.dart';
 import '../models/track.dart';
 import 'album_detail_screen.dart';
 import 'artist_profile_screen.dart';
+import 'genre_category_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -52,9 +53,10 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
         title: const Text('Search'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: const Color(0xFF121212),
       ),
       body: Column(
         children: [
@@ -63,12 +65,14 @@ class _SearchScreenState extends State<SearchScreen> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
+              style: const TextStyle(color: Colors.black),
               decoration: InputDecoration(
-                hintText: 'Search for songs, artists, albums...',
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Artists, songs, or albums',
+                hintStyle: const TextStyle(color: Color(0xFF535353)),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF535353)),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.clear, color: Color(0xFF535353)),
                         onPressed: () {
                           setState(() {
                             _searchController.clear();
@@ -78,10 +82,12 @@ class _SearchScreenState extends State<SearchScreen> {
                       )
                     : null,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(4),
+                  borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Colors.grey[200],
+                fillColor: const Color(0xFFFFFFFF),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
               onChanged: (value) {
                 setState(() {
@@ -103,32 +109,47 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildBrowseCategories() {
+    final categories = [
+      {'name': 'Pop', 'color': const Color(0xFF8D67AB)},
+      {'name': 'Hip-Hop', 'color': const Color(0xFFBA5D07)},
+      {'name': 'Rock', 'color': const Color(0xFFE13300)},
+      {'name': 'Electronic', 'color': const Color(0xFF1E3264)},
+      {'name': 'R&B', 'color': const Color(0xFF477D95)},
+      {'name': 'Alternative', 'color': const Color(0xFF608108)},
+      {'name': 'Indie', 'color': const Color(0xFF8E1538)},
+      {'name': 'Classical', 'color': const Color(0xFF1E3A8A)},
+    ];
+    
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Browse Categories',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          const Text(
+            'Browse all',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.5,
-              children: [
-                _buildCategoryCard('Rock', Colors.red[400]!),
-                _buildCategoryCard('Pop', Colors.blue[400]!),
-                _buildCategoryCard('Jazz', Colors.orange[400]!),
-                _buildCategoryCard('Classical', Colors.purple[400]!),
-                _buildCategoryCard('Hip Hop', Colors.green[400]!),
-                _buildCategoryCard('Electronic', Colors.teal[400]!),
-              ],
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.6,
+              ),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                return _buildCategoryCard(
+                  category['name'] as String,
+                  category['color'] as Color,
+                );
+              },
             ),
           ),
         ],
@@ -139,16 +160,24 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildCategoryCard(String title, Color color) {
     return GestureDetector(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Browsing $title music')),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GenreCategoryScreen(
+              genre: title,
+              color: color,
+            ),
+          ),
         );
       },
       child: Container(
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Center(
+        padding: const EdgeInsets.all(16),
+        child: Align(
+          alignment: Alignment.topLeft,
           child: Text(
             title,
             style: const TextStyle(
@@ -170,88 +199,133 @@ class _SearchScreenState extends State<SearchScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (_filteredAlbums.isNotEmpty) ...[
-              Text(
+              const Text(
                 'Albums',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               ..._filteredAlbums.map((album) {
-                return ListTile(
-                  leading: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.purple[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.album, color: Colors.white),
-                  ),
-                  title: Text(album.title),
-                  subtitle: Text(album.artistName),
-                  trailing: Text(album.releaseYear),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AlbumDetailScreen(album: album),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF1DB954).withOpacity(0.6),
+                            const Color(0xFF191414).withOpacity(0.8),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                    );
-                  },
+                      child: const Icon(Icons.album, color: Colors.white),
+                    ),
+                    title: Text(
+                      album.title,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: Text(
+                      '${album.artistName} • ${album.releaseYear}',
+                      style: const TextStyle(color: Color(0xFFB3B3B3), fontSize: 12),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AlbumDetailScreen(album: album),
+                        ),
+                      );
+                    },
+                  ),
                 );
               }).toList(),
               const SizedBox(height: 16),
             ],
             if (_filteredArtists.isNotEmpty) ...[
-              Text(
+              const Text(
                 'Artists',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               ..._filteredArtists.map((artist) {
-                return ListTile(
-                  leading: CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.blue[200],
-                    child: const Icon(Icons.person, color: Colors.white),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      radius: 25,
+                      backgroundColor: const Color(0xFF535353),
+                      child: const Icon(Icons.person, color: Colors.white),
+                    ),
+                    title: Text(
+                      artist.name,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: Text(
+                      'Artist',
+                      style: const TextStyle(color: Color(0xFFB3B3B3), fontSize: 12),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ArtistProfileScreen(artist: artist),
+                        ),
+                      );
+                    },
                   ),
-                  title: Text(artist.name),
-                  subtitle: Text('${artist.discography.length} album(s)'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ArtistProfileScreen(artist: artist),
-                      ),
-                    );
-                  },
                 );
               }).toList(),
               const SizedBox(height: 16),
             ],
             if (_filteredTracks.isNotEmpty) ...[
-              Text(
+              const Text(
                 'Songs',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               ..._filteredTracks.map((track) {
-                return ListTile(
-                  leading: const Icon(Icons.music_note),
-                  title: Text(track.title),
-                  subtitle: Text(track.artistName),
-                  trailing: Text(track.duration),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Playing ${track.title}')),
-                    );
-                  },
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.music_note, color: Color(0xFFB3B3B3)),
+                    title: Text(
+                      track.title,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: Text(
+                      track.artistName,
+                      style: const TextStyle(color: Color(0xFFB3B3B3), fontSize: 12),
+                    ),
+                    trailing: Text(
+                      track.duration,
+                      style: const TextStyle(color: Color(0xFFB3B3B3), fontSize: 12),
+                    ),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Playing ${track.title}'),
+                          backgroundColor: const Color(0xFF282828),
+                        ),
+                      );
+                    },
+                  ),
                 );
               }).toList(),
             ],
@@ -263,20 +337,20 @@ class _SearchScreenState extends State<SearchScreen> {
                   padding: const EdgeInsets.all(32.0),
                   child: Column(
                     children: [
-                      Icon(Icons.search_off, size: 80, color: Colors.grey[400]),
+                      Icon(Icons.search_off, size: 80, color: const Color(0xFF535353)),
                       const SizedBox(height: 16),
-                      Text(
+                      const Text(
                         'No results found',
                         style: TextStyle(
                           fontSize: 18,
-                          color: Colors.grey[600],
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      const Text(
                         'Try searching with different keywords',
-                        style: TextStyle(color: Colors.grey[500]),
+                        style: TextStyle(color: Color(0xFFB3B3B3)),
                       ),
                     ],
                   ),

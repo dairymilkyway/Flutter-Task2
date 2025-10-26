@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/sample_data.dart';
 import '../models/playlist.dart';
+import 'playlist_detail_screen.dart';
 
 class MyPlaylistsScreen extends StatefulWidget {
   const MyPlaylistsScreen({super.key});
@@ -18,12 +19,23 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
       builder: (BuildContext context) {
         String playlistName = '';
         return AlertDialog(
-          title: const Text('Create New Playlist'),
+          backgroundColor: const Color(0xFF282828),
+          title: const Text(
+            'Create New Playlist',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
           content: TextField(
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Enter playlist name',
-              border: OutlineInputBorder(),
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'My Playlist #${myPlaylists.length + 1}',
+              hintStyle: const TextStyle(color: Color(0xFF535353)),
+              filled: true,
+              fillColor: const Color(0xFF3E3E3E),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide.none,
+              ),
             ),
             onChanged: (value) {
               playlistName = value;
@@ -34,7 +46,10 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFFB3B3B3)),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -44,17 +59,24 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
                       Playlist(
                         id: 'playlist_${DateTime.now().millisecondsSinceEpoch}',
                         name: playlistName,
-                        coverUrl: 'https://via.placeholder.com/300x300/9C27B0/FFFFFF?text=New',
+                        coverUrl: 'https://via.placeholder.com/300x300/1DB954/FFFFFF?text=New',
                         tracks: [],
                       ),
                     );
                   });
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Created "$playlistName"')),
+                    SnackBar(
+                      content: Text('Created "$playlistName"'),
+                      backgroundColor: const Color(0xFF282828),
+                    ),
                   );
                 }
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1DB954),
+                foregroundColor: Colors.black,
+              ),
               child: const Text('Create'),
             ),
           ],
@@ -66,9 +88,10 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: const Text('My Playlists'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Your Library'),
+        backgroundColor: const Color(0xFF121212),
       ),
       body: myPlaylists.isEmpty
           ? Center(
@@ -76,24 +99,25 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.playlist_add,
+                    Icons.library_music_outlined,
                     size: 100,
-                    color: Colors.grey[400],
+                    color: const Color(0xFF535353),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    'No playlists yet',
+                  const Text(
+                    'Your library is empty',
                     style: TextStyle(
                       fontSize: 20,
-                      color: Colors.grey[600],
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Tap the + button to create your first playlist',
+                  const Text(
+                    'Create your first playlist',
                     style: TextStyle(
-                      color: Colors.grey[500],
+                      color: Color(0xFFB3B3B3),
+                      fontSize: 14,
                     ),
                   ),
                 ],
@@ -104,31 +128,28 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Your Collection',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                  const Text(
+                    'Playlists',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${myPlaylists.length} playlist${myPlaylists.length != 1 ? 's' : ''}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
+                    '${myPlaylists.length} ${myPlaylists.length == 1 ? 'playlist' : 'playlists'}',
+                    style: const TextStyle(
+                      color: Color(0xFFB3B3B3),
+                      fontSize: 14,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   Expanded(
-                    child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 0.85,
-                      ),
+                    child: ListView.builder(
                       itemCount: myPlaylists.length,
                       itemBuilder: (context, index) {
-                        return _buildPlaylistCard(myPlaylists[index]);
+                        return _buildPlaylistListItem(myPlaylists[index]);
                       },
                     ),
                   ),
@@ -138,71 +159,72 @@ class _MyPlaylistsScreenState extends State<MyPlaylistsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _createNewPlaylist,
         tooltip: 'Create New Playlist',
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFF1DB954),
+        child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }
 
-  Widget _buildPlaylistCard(Playlist playlist) {
-    return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Opening ${playlist.name}')),
-        );
-      },
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.purple[300],
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.music_note,
-                    size: 60,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                ),
-              ),
+  Widget _buildPlaylistListItem(Playlist playlist) {
+    final gradientColors = [
+      [const Color(0xFF1DB954), const Color(0xFF0D5C2B)],
+      [const Color(0xFFE13300), const Color(0xFF8A1F00)],
+      [const Color(0xFF8D67AB), const Color(0xFF4A3557)],
+      [const Color(0xFF477D95), const Color(0xFF234052)],
+      [const Color(0xFFBA5D07), const Color(0xFF5D2E03)],
+      [const Color(0xFF1E3264), const Color(0xFF0F1932)],
+    ];
+    
+    final colorIndex = int.parse(playlist.id.replaceAll(RegExp(r'[^0-9]'), '')) % gradientColors.length;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: gradientColors[colorIndex],
             ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    playlist.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${playlist.trackCount} song${playlist.trackCount != 1 ? 's' : ''}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Icon(
+            Icons.music_note,
+            color: Colors.white.withOpacity(0.9),
+            size: 28,
+          ),
         ),
+        title: Text(
+          playlist.name,
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 16,
+            color: Colors.white,
+          ),
+        ),
+        subtitle: Text(
+          'Playlist • ${playlist.trackCount} song${playlist.trackCount != 1 ? 's' : ''}',
+          style: const TextStyle(
+            color: Color(0xFFB3B3B3),
+            fontSize: 13,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.chevron_right,
+          color: Color(0xFFB3B3B3),
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PlaylistDetailScreen(playlist: playlist),
+            ),
+          );
+        },
       ),
     );
   }

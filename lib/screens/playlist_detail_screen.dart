@@ -1,25 +1,34 @@
 import 'package:flutter/material.dart';
-import '../models/album.dart';
+import '../models/playlist.dart';
 import '../models/track.dart';
-import '../data/sample_data.dart';
-import 'artist_profile_screen.dart';
 import 'now_playing_screen.dart';
 
-class AlbumDetailScreen extends StatefulWidget {
-  final Album album;
+class PlaylistDetailScreen extends StatefulWidget {
+  final Playlist playlist;
 
-  const AlbumDetailScreen({super.key, required this.album});
+  const PlaylistDetailScreen({super.key, required this.playlist});
 
   @override
-  State<AlbumDetailScreen> createState() => _AlbumDetailScreenState();
+  State<PlaylistDetailScreen> createState() => _PlaylistDetailScreenState();
 }
 
-class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
+class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   bool isFavorite = false;
 
   @override
   Widget build(BuildContext context) {
-    final album = widget.album;
+    final playlistTracks = widget.playlist.tracks;
+    final gradientColors = [
+      [const Color(0xFF1DB954), const Color(0xFF0D5C2B)],
+      [const Color(0xFFE13300), const Color(0xFF8A1F00)],
+      [const Color(0xFF8D67AB), const Color(0xFF4A3557)],
+      [const Color(0xFF477D95), const Color(0xFF234052)],
+      [const Color(0xFFBA5D07), const Color(0xFF5D2E03)],
+      [const Color(0xFF1E3264), const Color(0xFF0F1932)],
+    ];
+    
+    final colorIndex = int.parse(widget.playlist.id.replaceAll(RegExp(r'[^0-9]'), '')) % gradientColors.length;
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
@@ -33,7 +42,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onPressed: () {
-              _showAlbumOptions(context);
+              _showPlaylistOptions(context);
             },
           ),
         ],
@@ -41,24 +50,24 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
       extendBodyBehindAppBar: true,
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section with Album Artwork and Metadata
+            // Hero Section with Gradient
             Container(
-              padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(24, 80, 24, 24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    const Color(0xFF1DB954).withOpacity(0.4),
+                    gradientColors[colorIndex][0],
                     const Color(0xFF121212),
                   ],
                 ),
               ),
               child: Column(
                 children: [
-                  // Album Artwork
+                  // Playlist Artwork
                   Container(
                     width: 200,
                     height: 200,
@@ -66,12 +75,9 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          const Color(0xFF1DB954).withOpacity(0.6),
-                          const Color(0xFF191414).withOpacity(0.8),
-                        ],
+                        colors: gradientColors[colorIndex],
                       ),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.5),
@@ -82,17 +88,17 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                     ),
                     child: Center(
                       child: Icon(
-                        Icons.album,
+                        Icons.queue_music,
                         size: 100,
                         color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Album Metadata (Text Information)
+                  // Playlist Metadata
                   Center(
                     child: Text(
-                      album.title,
+                      widget.playlist.name,
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -102,47 +108,21 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        // Navigate to Artist Profile
-                        final artist = sampleArtists.firstWhere(
-                          (a) => a.id == album.artistId,
-                        );
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ArtistProfileScreen(artist: artist),
-                          ),
-                        );
-                      },
+                  if (widget.playlist.description != null)
+                    Center(
                       child: Text(
-                        album.artistName,
+                        widget.playlist.description!,
                         style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFFB3B3B3),
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                  ),
                   const SizedBox(height: 8),
                   Center(
                     child: Text(
-                      'Album • ${album.releaseYear}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFFB3B3B3),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Center(
-                    child: Text(
-                      '${album.tracks.length} songs',
+                      '${playlistTracks.length} songs',
                       style: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFFB3B3B3),
@@ -154,7 +134,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
               ),
             ),
 
-            // Play and Download Controls
+            // Play and Controls
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
               child: Row(
@@ -166,14 +146,14 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                     ),
                     child: IconButton(
                       onPressed: () {
-                        if (album.tracks.isNotEmpty) {
+                        if (playlistTracks.isNotEmpty) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => NowPlayingScreen(
-                                track: album.tracks.first,
-                                albumTitle: album.title,
-                                playlist: album.tracks,
+                                track: playlistTracks.first,
+                                albumTitle: widget.playlist.name,
+                                playlist: playlistTracks,
                               ),
                             ),
                           );
@@ -208,7 +188,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                   const SizedBox(width: 16),
                   IconButton(
                     onPressed: () {
-                      _showAlbumOptions(context);
+                      _showPlaylistOptions(context);
                     },
                     icon: const Icon(Icons.more_vert, size: 28, color: Color(0xFFB3B3B3)),
                   ),
@@ -224,8 +204,8 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                 children: [
                   // Individual Track Rows
                   Column(
-                    children: album.tracks.map((track) {
-                      return _buildTrackRow(context, track);
+                    children: playlistTracks.asMap().entries.map((entry) {
+                      return _buildTrackRow(context, entry.value, entry.key + 1);
                     }).toList(),
                   ),
                 ],
@@ -238,8 +218,8 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
     );
   }
 
-  Widget _buildTrackRow(BuildContext context, Track track) {
-    final album = widget.album;
+  Widget _buildTrackRow(BuildContext context, Track track, int index) {
+    final playlistTracks = widget.playlist.tracks;
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -247,8 +227,8 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
           MaterialPageRoute(
             builder: (context) => NowPlayingScreen(
               track: track,
-              albumTitle: album.title,
-              playlist: album.tracks,
+              albumTitle: widget.playlist.name,
+              playlist: playlistTracks,
             ),
           ),
         );
@@ -261,14 +241,15 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
             SizedBox(
               width: 30,
               child: Text(
-                '${track.trackNumber}',
+                '$index',
                 style: const TextStyle(
-                  fontSize: 16,
                   color: Color(0xFFB3B3B3),
+                  fontSize: 16,
                 ),
               ),
             ),
-            // Song Title
+            const SizedBox(width: 16),
+            // Track Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,18 +257,21 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                   Text(
                     track.title,
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
                       color: Colors.white,
+                      fontSize: 16,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     track.artistName,
                     style: const TextStyle(
-                      fontSize: 14,
                       color: Color(0xFFB3B3B3),
+                      fontSize: 14,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -296,13 +280,18 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
             Text(
               track.duration,
               style: const TextStyle(
-                fontSize: 14,
                 color: Color(0xFFB3B3B3),
+                fontSize: 14,
               ),
             ),
+            const SizedBox(width: 8),
             // More Options
             IconButton(
-              icon: const Icon(Icons.more_vert, size: 20, color: Color(0xFFB3B3B3)),
+              icon: const Icon(
+                Icons.more_vert,
+                color: Color(0xFFB3B3B3),
+                size: 20,
+              ),
               onPressed: () {
                 _showTrackOptions(context, track);
               },
@@ -313,61 +302,47 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
     );
   }
 
-  void _showAlbumOptions(BuildContext context) {
+  void _showPlaylistOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF282828),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.playlist_add, color: Colors.white),
-                title: const Text('Add to Playlist', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Added to playlist'),
-                      backgroundColor: Color(0xFF282828),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.share, color: Colors.white),
-                title: const Text('Share Album', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Sharing album...'),
-                      backgroundColor: Color(0xFF282828),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.info_outline, color: Colors.white),
-                title: const Text('Album Info', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Showing album info...'),
-                      backgroundColor: Color(0xFF282828),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.share, color: Colors.white),
+              title: const Text('Share playlist', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Sharing ${widget.playlist.name}'),
+                    backgroundColor: const Color(0xFF282828),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.download, color: Colors.white),
+              title: const Text('Download', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Downloading playlist...'),
+                    backgroundColor: Color(0xFF1DB954),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -378,54 +353,53 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.playlist_add, color: Colors.white),
-                title: const Text('Add to Playlist', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Added ${track.title} to playlist'),
-                      backgroundColor: const Color(0xFF282828),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.favorite_border, color: Colors.white),
-                title: const Text('Like', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Liked ${track.title}'),
-                      backgroundColor: const Color(0xFF282828),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.share, color: Colors.white),
-                title: const Text('Share', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Sharing track...'),
-                      backgroundColor: Color(0xFF282828),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.playlist_add, color: Colors.white),
+              title: const Text('Add to another playlist', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Added to playlist'),
+                    backgroundColor: Color(0xFF1DB954),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.remove_circle_outline, color: Colors.white),
+              title: const Text('Remove from this playlist', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Removed from playlist'),
+                    backgroundColor: Color(0xFF282828),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.share, color: Colors.white),
+              title: const Text('Share', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Sharing ${track.title}'),
+                    backgroundColor: const Color(0xFF282828),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
